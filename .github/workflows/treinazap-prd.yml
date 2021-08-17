@@ -16,7 +16,7 @@ jobs:
         node-version: 12.21.0
     - name: Install and Build
       run: npm install && npm run build
-    - name: Listar
-      run: ls -la
       env:
         CI: "false"
+    - name: Listar
+      run: ls -la
