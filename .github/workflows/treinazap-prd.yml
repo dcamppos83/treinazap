@@ -12,8 +12,13 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
+    - uses: dopplerhq/cli-action@v1
       with:
         node-version: 12.21.0
+    - name: Set envs Agent GitHub Actions
+      run: doppler secrets download --no-file --format=docker >> $GITHUB_ENV;
+      env:
+        DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_PRD }}
     - name: Install AWS CLIENT
       run: pip install awscli
     - name: Install and Build
