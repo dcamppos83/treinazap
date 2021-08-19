@@ -29,10 +29,32 @@ jobs:
       run: npm install && npm run build
       env:
         CI: "false"
-    - name: SonarQube
-      run: wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip && unzip sonar-scanner-cli-4.6.2.2472-linux.zip
-    - name: Analisys Sonar
-      run: ./sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner -Dsonar.projectKey=treinazap -Dsonar.sources=. -Dsonar.host.url=http://sonar.cloudvoices.cf/ -Dsonar.login=7638ae8c697eb8c7695a91a60fc383aa560038f2
+    #- name: SonarQube
+    #  run: wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip && unzip sonar-scanner-cli-4.6.2.2472-linux.zip
+    #- name: Analisys Sonar
+    #  run: ./sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner -Dsonar.projectKey=treinazap -Dsonar.sources=. -Dsonar.host.url=http://sonar.cloudvoices.cf/ -Dsonar.login=7638ae8c697eb8c7695a91a60fc383aa560038f2
     
-    - name: Clear Cache Cloud Front
-      run: AWS_ACCESS_KEY_ID=${ACCESS_KEY} AWS_SECRET_ACCESS_KEY=${SECRET_KEY} aws cloudfront create-invalidation --distribution-id E2R8J6NP44AQZB --path '/*'
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ env.ACCESS_KEY }}
+        aws-secret-access-key: ${{ env.SECRET_KEY }}
+        aws-region: sa-east-1
+        
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      
+    - name: Build, Tag and push image to Amazon ECR
+      id: build-image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ECR_REPOSITOTY: 804396277754.dkr.ecr.sa-east-1.amazonaws.com/treinazap
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        docker build -t treinazap .
+        docker tag treinazap:latest $ECR_REPOSITOTY:latest
+        docker push $ECR_REPOSITOTY:latest
+
+    #- name: Clear Cache Cloud Front
+    #  run: AWS_ACCESS_KEY_ID=${ACCESS_KEY} AWS_SECRET_ACCESS_KEY=${SECRET_KEY} aws cloudfront create-invalidation --distribution-id E2R8J6NP44AQZB --path '/*'
